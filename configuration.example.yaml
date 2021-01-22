@@ -1,0 +1,9 @@
+api:
+  url: "http://localhost:8111"
+
+  authorization:
+    token: ""
+    token_path: "/home/engineer/workspace/tc-cli/access.token"
+
+  http:
+    request_timeout: 10s
