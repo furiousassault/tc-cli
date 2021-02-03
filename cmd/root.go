@@ -17,6 +17,7 @@ var cmdRoot = &cobra.Command{
 
 		return api.InitAPI(configuration.GetConfig())
 	},
+	SilenceUsage: true,
 }
 
 func Execute() {
@@ -39,7 +40,7 @@ func Execute() {
 	cmdList.AddCommand(cmdListProject, cmdListBuildType, cmdListBuild)
 	cmdDescribe.AddCommand(cmdDescribeProject, cmdDescribeBuildType, cmdDescribeBuild)
 
-	cmdRoot.AddCommand(cmdList, cmdDescribe, cmdLog, cmdToken)
+	cmdRoot.AddCommand(cmdList, cmdDescribe, cmdLog, cmdToken, cmdRun)
 
 	if err := cmdRoot.Execute(); err != nil {
 		os.Exit(1)

@@ -21,7 +21,7 @@ const (
 var api *Client
 
 func InitAPI(config configuration.Configuration) error {
-	fmt.Println("configuration", config)
+	// fmt.Println("configuration", config)
 	httpClient := &http.Client{
 		Timeout: config.API.HTTP.RequestTimeout,
 	}
@@ -59,7 +59,7 @@ func InitAPI(config configuration.Configuration) error {
 		return err
 	}
 
-	return api.Validate()
+	return api.Ping()
 }
 
 func API() *Client {
@@ -136,7 +136,6 @@ func newClientInstance(address string, httpClient *http.Client, sling *sling.Sli
 		Projects:   subapi.NewProjectService(slingRest.New(), httpClient),
 		BuildTypes: subapi.NewBuildTypeService(slingRest.New(), httpClient),
 		Builds:     subapi.NewBuildService(slingRest.New(), httpClient),
-		// FIXME buildqueue is not supported yet
 		BuildQueue: subapi.NewBuildQueueService(slingRest.New(), httpClient),
 		Token:      subapi.NewTokenService(slingRest.New(), httpClient),
 
@@ -144,8 +143,8 @@ func newClientInstance(address string, httpClient *http.Client, sling *sling.Sli
 	}, nil
 }
 
-// Validate tests if the client is properly configured and can be used
-func (c *Client) Validate() error {
+// Ping tests if the client is properly configured and can be used
+func (c *Client) Ping() error {
 	response, err := c.commonBase.Get("server").ReceiveSuccess(nil)
 
 	if err != nil {

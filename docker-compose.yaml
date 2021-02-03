@@ -1,0 +1,7 @@
+version: '3'
+services:
+  tc-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: furiousassault/tc-cli:${TAG:-latest}
