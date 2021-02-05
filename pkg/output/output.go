@@ -21,7 +21,7 @@ func Output() *TableOutputter {
 	return &TableOutputter{table: table}
 }
 
-func (tw *TableOutputter) List(headers []string, data [][]string) {
+func (tw *TableOutputter) PrintTable(headers []string, data [][]string) {
 	tw.table.SetHeader(headers)
 	tw.table.AppendBulk(data)
 	tw.table.Render()

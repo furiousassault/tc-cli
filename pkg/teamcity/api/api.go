@@ -18,52 +18,35 @@ const (
 	PathSuffixLog  = ""
 )
 
-var api *Client
-
-func InitAPI(config configuration.Configuration) error {
-	// fmt.Println("configuration", config)
+func InitAPI(config configuration.Configuration) (api *Client, err error) {
 	httpClient := &http.Client{
 		Timeout: config.API.HTTP.RequestTimeout,
 	}
 
 	if config.API.Authorization.Token != "" {
-		newApi, err := NewClientTokenAuth(config.API.URL, httpClient, authorization.AuthToken(config.API.Authorization.Token))
-		if err != nil {
-			return err
-		}
+		api = NewClientTokenAuth(
+			config.API.URL,
+			httpClient,
+			authorization.NewAuthorizerToken(config.API.Authorization.Token),
+		)
 
-		api = newApi
-		return nil
+		return api, api.Ping()
 	}
 
 	if config.API.Authorization.Username != "" && config.API.Authorization.Password != "" {
-		newApi, err := NewClientBasicAuth(
+		api = NewClientBasicAuth(
 			config.API.URL,
 			httpClient,
-			authorization.NewAuthorizerHTTP(config.API.Authorization.Username, config.API.Authorization.Password))
+			authorization.NewAuthorizerHTTP(config.API.Authorization.Username, config.API.Authorization.Password),
+		)
 
-		if err != nil {
-			return err
-		}
-
-		api = newApi
+		return api, api.Ping()
 	}
 
-	if api == nil {
-		fmt.Println("No authorization is provided, trying to use guest auth")
-	}
+	fmt.Println("No authorization is provided, trying to use guest auth")
+	api = NewClientGuestAuth(config.API.URL, httpClient, authorization.NewAuthorizerGuest())
 
-	// TODO unreachable now?
-	api, err := NewClientGuestAuth(config.API.URL, httpClient, authorization.NewAuthorizerGuest())
-	if err != nil {
-		return err
-	}
-
-	return api.Ping()
-}
-
-func API() *Client {
-	return api
+	return api, api.Ping()
 }
 
 // Client represents the base for connecting to TeamCity
@@ -85,11 +68,7 @@ type Client struct {
 	Token      *subapi.TokenService
 }
 
-func NewClientGuestAuth(address string, httpClient *http.Client, auth authorization.AuthorizerGuest) (*Client, error) {
-	if address == "" {
-		return nil, fmt.Errorf("address is required")
-	}
-
+func NewClientGuestAuth(address string, httpClient *http.Client, auth authorization.AuthorizerGuest) *Client {
 	slingBase := sling.New().
 		Set("Accept", "application/json").
 		Set("Origin", address)
@@ -98,34 +77,29 @@ func NewClientGuestAuth(address string, httpClient *http.Client, auth authorizat
 	return newClientInstance(address, httpClient, slingBase)
 }
 
-func NewClientBasicAuth(address string, httpClient *http.Client, auth authorization.AuthorizerHTTP) (*Client, error) {
-	if address == "" {
-		return nil, fmt.Errorf("address is required")
-	}
-
+func NewClientBasicAuth(address string, httpClient *http.Client, auth authorization.AuthorizerHTTP) *Client {
 	slingBase := sling.New().
 		Set("Accept", "application/json").
 		Set("Origin", address)
 
-	slingBase.Base(address+auth.ProvideURLAuthSuffix()).SetBasicAuth(auth.Username, auth.Password)
+	slingBase.Base(address+auth.ProvideURLAuthSuffix()).
+		SetBasicAuth(auth.Username, auth.Password)
+
 	return newClientInstance(address, httpClient, slingBase)
 }
 
-func NewClientTokenAuth(address string, httpClient *http.Client, auth authorization.AuthorizerToken) (*Client, error) {
-	if address == "" {
-		return nil, fmt.Errorf("address is required")
-	}
-
+func NewClientTokenAuth(address string, httpClient *http.Client, auth authorization.AuthorizerToken) *Client {
 	slingBase := sling.New().
 		Set("Accept", "application/json").
 		Set("Origin", address)
 
 	slingBase.Base(address+auth.ProvideURLAuthSuffix()).
 		Set("Authorization", fmt.Sprintf("Bearer %s", auth.Token))
+
 	return newClientInstance(address, httpClient, slingBase)
 }
 
-func newClientInstance(address string, httpClient *http.Client, sling *sling.Sling) (*Client, error) {
+func newClientInstance(address string, httpClient *http.Client, sling *sling.Sling) *Client {
 	slingRest := sling.New().Path(PathSuffixREST)
 	slingLog := sling.New().Path(PathSuffixLog)
 
@@ -140,22 +114,23 @@ func newClientInstance(address string, httpClient *http.Client, sling *sling.Sli
 		Token:      subapi.NewTokenService(slingRest.New(), httpClient),
 
 		Logs: subapi.NewLogService(slingLog.New(), httpClient),
-	}, nil
+	}
 }
 
 // Ping tests if the client is properly configured and can be used
 func (c *Client) Ping() error {
-	response, err := c.commonBase.Get("server").ReceiveSuccess(nil)
-
+	response, err := c.commonBase.Get("app/rest/server").ReceiveSuccess(nil)
 	if err != nil {
 		return err
 	}
 
 	if response.StatusCode != 200 && response.StatusCode != 403 {
+		fmt.Println(response.StatusCode)
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			return err
 		}
+
 		return fmt.Errorf("API error %s: %s", response.Status, body)
 	}
 

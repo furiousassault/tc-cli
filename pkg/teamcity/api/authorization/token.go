@@ -10,6 +10,6 @@ func (a AuthorizerToken) ProvideURLAuthSuffix() string {
 	return APIPathSuffixAuthToken
 }
 
-func AuthToken(token string) AuthorizerToken {
+func NewAuthorizerToken(token string) AuthorizerToken {
 	return AuthorizerToken{Token: token}
 }

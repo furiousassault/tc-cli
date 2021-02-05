@@ -2,23 +2,9 @@ package configuration
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
-	"gopkg.in/yaml.v2"
-)
-
-const (
-	DefaultPathToken         = ".tc-client/access.token"
-	DefaultPathConfiguration = ".tc-client/configuration.yaml"
-)
-
-var (
-	ConfigPath string
-	config     = &Configuration{}
 )
 
 type Configuration struct {
@@ -43,60 +29,49 @@ type HTTP struct {
 	RequestTimeout time.Duration `yaml:"request_timeout" envconfig:"TC_REQUEST_TIMEOUT"`
 }
 
-func InitConfigFromYAML() error {
-	homeDir, err := os.UserHomeDir()
+func ConfigFromYAML(configPath string) (config *Configuration, err error) {
+	configPath, err = configPathWithDefault(configPath)
 	if err != nil {
-		return fmt.Errorf("error during user's home directory evaluation")
+		return nil, err
 	}
 
-	if ConfigPath == "" {
-		defaultPathConfiguration := filepath.Join(homeDir, DefaultPathConfiguration)
-		ConfigPath = defaultPathConfiguration
-		fmt.Printf(
-			"Configuration file path is not specified, trying to find it in '%s'\n",
-			defaultPathConfiguration,
-		)
-	}
-
-	file, err := ioutil.ReadFile(ConfigPath)
+	config, err = configurationFromYaml(configPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if err := yaml.Unmarshal(file, config); err != nil {
-		return err
-	}
-
-	if err = envconfig.Process("", config); err != nil {
-		// todo global variables overuse with cobra everywhere... pass normal logger somehow.
+	// fill unset config fields with envs
+	err = envconfig.Process("", config)
+	if err != nil {
 		fmt.Println("Error processing environment variables in configuration init")
 	}
 
-	if config.API.Authorization.Username == "" || config.API.Authorization.Password == "" {
-		if config.API.Authorization.Token == "" {
-			if config.API.Authorization.TokenFilePath == "" {
-				defaultTokenPath := filepath.Join(homeDir, DefaultPathConfiguration)
-				fmt.Printf(
-					"Token file path is not specified, trying to find it in '%s'\n",
-					defaultTokenPath,
-				)
-
-				config.API.Authorization.TokenFilePath = defaultTokenPath
-			}
-
-			fileToken, err := ioutil.ReadFile(config.API.Authorization.TokenFilePath)
-			if err != nil {
-				fmt.Println("Token file read unsuccessful")
-				return nil
-			}
-			
-			config.API.Authorization.Token = string(fileToken)
-		}
-	}
-
-	return nil
+	initializeAuthParameters(config)
+	return config, config.validate()
 }
 
-func GetConfig() Configuration {
-	return *config
+func initializeAuthParameters(config *Configuration) {
+	// if it's the httpAuth, no point in reading token path
+	if config.API.Authorization.Username != "" && config.API.Authorization.Password != "" {
+		return
+	}
+
+	// if token is set explicitly, the same
+	if config.API.Authorization.Token != "" {
+		return
+	}
+
+	// try to evaluate token from token path
+	tokenFilePath, err := tokenPathWithDefault(config.API.Authorization.TokenFilePath)
+	if err != nil {
+		return
+	}
+
+	token, errTokenFromFile := fileContentString(tokenFilePath)
+	if errTokenFromFile != nil {
+		return
+	}
+
+	config.API.Authorization.Token = token
+	return
 }
