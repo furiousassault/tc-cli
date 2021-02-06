@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	commandDescribe "github.com/furiousassault/tc-cli/pkg/commands/describe"
 	commandList "github.com/furiousassault/tc-cli/pkg/commands/list"
@@ -19,11 +20,17 @@ import (
 
 func main() {
 	cmdRoot := createCmdRoot()
-	configPath := cmdRoot.Flags().StringP("config-path", "c", "", "Path to configuration")
-	err := cmdRoot.Flags().Parse(os.Args[1:])
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	rootFlagset := pflag.NewFlagSet("some", pflag.ContinueOnError)
+	configPath := rootFlagset.StringP(
+		"config-path", "c", os.Getenv("TC_CLI_CONFIG_PATH"), "Path to configuration",
+	)
+
+	// it's not clear how to parse args partially before main parsing/execution routine
+	// this pre-parsing attempt failing cause doesn't see flags defined after its execution
+	// there should be another way to do it, without globals
+	_ = rootFlagset.Parse(os.Args[1:])
+	cmdRoot.PersistentFlags().AddFlagSet(rootFlagset)
 
 	config, err := configuration.ConfigFromYAML(*configPath)
 	if err != nil {
@@ -31,7 +38,6 @@ func main() {
 	}
 
 	fmt.Println("configuration", config)
-
 
 	api, err := apiClient.InitAPI(*config)
 	if err != nil {
@@ -45,6 +51,7 @@ func main() {
 		commandList.CreateCommandTreeList(api.Projects, api.Builds, output.Output()),
 		commandRun.CreateCommandBuildConfigurationRun(api.BuildQueue, output.Output()),
 	)
+
 	if err := cmdRoot.Execute(); err != nil {
 		os.Exit(1)
 	}

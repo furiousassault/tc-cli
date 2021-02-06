@@ -15,18 +15,18 @@ type API struct {
 	Authorization Authorization `yaml:"authorization"`
 	HTTP          HTTP          `yaml:"http"`
 
-	URL string `yaml:"url" envconfig:"TC_URL"` // including schema, url and port
+	URL string `yaml:"url" envconfig:"TC_CLI_URL"` // including schema, url and port
 }
 
 type Authorization struct {
-	Username      string `yaml:"username" envconfig:"TC_USERNAME"`
-	Password      string `yaml:"password" envconfig:"TC_PASSWORD"`
-	Token         string `yaml:"token" envconfig:"TC_TOKEN"`
-	TokenFilePath string `yaml:"token_path" envconfig:"TC_TOKEN_FILE_PATH"`
+	Username      string `yaml:"username" envconfig:"TC_CLI_USERNAME"`
+	Password      string `yaml:"password" envconfig:"TC_CLI_PASSWORD"`
+	Token         string `yaml:"token" envconfig:"TC_CLI_TOKEN"`
+	TokenFilePath string `yaml:"token_path" envconfig:"TC_CLI_TOKEN_FILE_PATH"`
 }
 
 type HTTP struct {
-	RequestTimeout time.Duration `yaml:"request_timeout" envconfig:"TC_REQUEST_TIMEOUT"`
+	RequestTimeout time.Duration `yaml:"request_timeout" envconfig:"TC_CLI_REQUEST_TIMEOUT"`
 }
 
 func ConfigFromYAML(configPath string) (config *Configuration, err error) {

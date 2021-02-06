@@ -35,13 +35,16 @@ func CreateCommandTreeList(
 		Short:   "list builds of buildType specified by id",
 		Args:    cobra.ExactArgs(1),
 	}
-	buildsCount := cmdListBuild.Flags().IntP(
+
+	buildsCountPointer := cmdListBuild.Flags().IntP(
 		"number",
 		"n",
 		10,
 		"number of latest builds to return in list",
 	)
-	cmdListBuild.RunE = createHandlerListBuilds(buildsGetter, outputter, *buildsCount)
+	// pass flag as a pointer to make it filled with actual value on final function execution;
+	// todo find more obvious solution to create command flags
+	cmdListBuild.RunE = createHandlerListBuilds(buildsGetter, outputter, buildsCountPointer)
 	cmdList.AddCommand(cmdListProject, cmdListBuildType, cmdListBuild)
 
 	return cmdList
@@ -73,11 +76,11 @@ func createHandlerListBuildTypes(
 }
 
 func createHandlerListBuilds(
-	buildsGetter BuildsGetter, outputter output.Outputter, count int) func(cmd *cobra.Command, args []string) error {
+	buildsGetter BuildsGetter, outputter output.Outputter, count *int) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		projectID := args[0]
 
-		return listBuilds(buildsGetter, outputter, projectID, count)
+		return listBuilds(buildsGetter, outputter, projectID, *count)
 	}
 }
 
