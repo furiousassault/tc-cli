@@ -9,6 +9,8 @@ import (
 
 type Configuration struct {
 	API API
+
+	ArtifactsDirectoryDefault string `yaml:"artifacts_directory" envconfig:"TC_CLI_ARTIFACTS_DIRECTORY_DEFAULT"`
 }
 
 type API struct {
@@ -47,6 +49,11 @@ func ConfigFromYAML(configPath string) (config *Configuration, err error) {
 	}
 
 	initializeAuthParameters(config)
+
+	if config.ArtifactsDirectoryDefault == "" {
+		config.ArtifactsDirectoryDefault = DefaultPathArtifactsDirectory
+	}
+
 	return config, config.validate()
 }
 
