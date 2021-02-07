@@ -4,17 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 
 	"github.com/dghubble/sling"
 )
 
 type requestsMaker struct {
-	httpClient *http.Client
+	httpClient sling.Doer
 	sling      *sling.Sling
 }
 
-func newRequestsMakerWithSling(httpClient *http.Client, s *sling.Sling) *requestsMaker {
+func newRequestsMakerWithSling(httpClient sling.Doer, s *sling.Sling) *requestsMaker {
 	return &requestsMaker{
 		httpClient: httpClient,
 		sling:      s,

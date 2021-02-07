@@ -2,7 +2,6 @@ package subapi
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/dghubble/sling"
 )
@@ -40,11 +39,11 @@ type ProjectReference struct {
 // ProjectService is a service for requesting projects.
 type ProjectService struct {
 	sling         *sling.Sling
-	httpClient    *http.Client
+	httpClient    sling.Doer
 	requestsMaker *requestsMaker
 }
 
-func NewProjectService(base *sling.Sling, client *http.Client) *ProjectService {
+func NewProjectService(base *sling.Sling, client sling.Doer) *ProjectService {
 	sling := base.Path("projects/")
 	return &ProjectService{
 		sling:         sling,

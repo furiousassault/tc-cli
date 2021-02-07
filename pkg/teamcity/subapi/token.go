@@ -2,7 +2,6 @@ package subapi
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/dghubble/sling"
@@ -20,16 +19,16 @@ type Tokens struct {
 
 type TokenService struct {
 	sling         *sling.Sling
-	httpClient    *http.Client
+	httpClient    sling.Doer
 	requestsMaker *requestsMaker
 }
 
-func NewTokenService(base *sling.Sling, client *http.Client) *TokenService {
-	sling := base.Path("users/")
+func NewTokenService(base *sling.Sling, client sling.Doer) *TokenService {
+	s := base.Path("users/")
 	return &TokenService{
-		sling:         sling,
+		sling:         s,
 		httpClient:    client,
-		requestsMaker: newRequestsMakerWithSling(client, sling),
+		requestsMaker: newRequestsMakerWithSling(client, s),
 	}
 }
 

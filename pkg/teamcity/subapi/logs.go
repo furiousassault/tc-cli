@@ -1,23 +1,21 @@
 package subapi
 
 import (
-	"net/http"
-
 	"github.com/dghubble/sling"
 )
 
 type LogService struct {
-	sling      *sling.Sling
-	httpClient *http.Client
+	sling         *sling.Sling
+	httpClient    sling.Doer
 	requestsMaker *requestsMaker
 }
 
-func NewLogService(base *sling.Sling, client *http.Client) *LogService {
-	sling := base.Path("downloadBuildLog.html")
+func NewLogService(base *sling.Sling, client sling.Doer) *LogService {
+	s := base.Path("downloadBuildLog.html")
 	return &LogService{
-		sling:      sling,
-		httpClient: client,
-		requestsMaker: newRequestsMakerWithSling(client, sling),
+		sling:         s,
+		httpClient:    client,
+		requestsMaker: newRequestsMakerWithSling(client, s),
 	}
 }
 

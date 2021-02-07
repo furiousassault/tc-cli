@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -35,9 +35,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("configuration", config)
+	// fmt.Println("configuration", config)
+	httpClient := &http.Client{
+		Timeout: config.API.HTTP.RequestTimeout,
+	}
 
-	api, err := apiClient.InitAPI(*config)
+	api, err := apiClient.InitAPI(*config, httpClient)
 	if err != nil {
 		log.Fatal("API init failed: ", err)
 	}

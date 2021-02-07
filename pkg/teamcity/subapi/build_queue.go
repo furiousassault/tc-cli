@@ -2,7 +2,6 @@ package subapi
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/dghubble/sling"
 )
@@ -47,16 +46,16 @@ type User struct {
 
 type BuildQueueService struct {
 	sling         *sling.Sling
-	httpClient    *http.Client
+	httpClient    sling.Doer
 	requestsMaker *requestsMaker
 }
 
-func NewBuildQueueService(base *sling.Sling, client *http.Client) *BuildQueueService {
-	sling := base.Path("buildQueue/")
+func NewBuildQueueService(base *sling.Sling, client sling.Doer) *BuildQueueService {
+	s := base.Path("buildQueue/")
 	return &BuildQueueService{
-		sling:         sling,
+		sling:         s,
 		httpClient:    client,
-		requestsMaker: newRequestsMakerWithSling(client, sling),
+		requestsMaker: newRequestsMakerWithSling(client, s),
 	}
 }
 

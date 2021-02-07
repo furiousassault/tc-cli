@@ -2,7 +2,6 @@ package subapi
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/dghubble/sling"
@@ -41,16 +40,16 @@ type Builds struct {
 
 type BuildService struct {
 	sling         *sling.Sling
-	httpClient    *http.Client
+	httpClient    sling.Doer
 	requestsMaker *requestsMaker
 }
 
-func NewBuildService(base *sling.Sling, client *http.Client) *BuildService {
-	sling := base.Path("builds/")
+func NewBuildService(base *sling.Sling, client sling.Doer) *BuildService {
+	s := base.Path("builds/")
 	return &BuildService{
-		sling:         sling,
+		sling:         s,
 		httpClient:    client,
-		requestsMaker: newRequestsMakerWithSling(client, sling),
+		requestsMaker: newRequestsMakerWithSling(client, s),
 	}
 }
 

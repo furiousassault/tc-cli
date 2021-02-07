@@ -3,8 +3,6 @@ package api
 import (
 	"fmt"
 	"io/ioutil"
-	"net/http"
-	"time"
 
 	"github.com/dghubble/sling"
 
@@ -18,11 +16,7 @@ const (
 	PathSuffixLog  = ""
 )
 
-func InitAPI(config configuration.Configuration) (api *Client, err error) {
-	httpClient := &http.Client{
-		Timeout: config.API.HTTP.RequestTimeout,
-	}
-
+func InitAPI(config configuration.Configuration, httpClient sling.Doer) (api *Client, err error) {
 	if config.API.Authorization.Token != "" {
 		api = NewClientTokenAuth(
 			config.API.URL,
@@ -54,9 +48,6 @@ type Client struct {
 	address string
 	baseURI string
 
-	HTTPClient   *http.Client
-	RetryTimeout time.Duration
-
 	commonBase   *sling.Sling
 	logFetchBase *sling.Sling
 
@@ -68,7 +59,7 @@ type Client struct {
 	Token      *subapi.TokenService
 }
 
-func NewClientGuestAuth(address string, httpClient *http.Client, auth authorization.AuthorizerGuest) *Client {
+func NewClientGuestAuth(address string, httpClient sling.Doer, auth authorization.AuthorizerGuest) *Client {
 	slingBase := sling.New().
 		Set("Accept", "application/json").
 		Set("Origin", address)
@@ -77,7 +68,7 @@ func NewClientGuestAuth(address string, httpClient *http.Client, auth authorizat
 	return newClientInstance(address, httpClient, slingBase)
 }
 
-func NewClientBasicAuth(address string, httpClient *http.Client, auth authorization.AuthorizerHTTP) *Client {
+func NewClientBasicAuth(address string, httpClient sling.Doer, auth authorization.AuthorizerHTTP) *Client {
 	slingBase := sling.New().
 		Set("Accept", "application/json").
 		Set("Origin", address)
@@ -88,7 +79,7 @@ func NewClientBasicAuth(address string, httpClient *http.Client, auth authorizat
 	return newClientInstance(address, httpClient, slingBase)
 }
 
-func NewClientTokenAuth(address string, httpClient *http.Client, auth authorization.AuthorizerToken) *Client {
+func NewClientTokenAuth(address string, httpClient sling.Doer, auth authorization.AuthorizerToken) *Client {
 	slingBase := sling.New().
 		Set("Accept", "application/json").
 		Set("Origin", address)
@@ -99,20 +90,18 @@ func NewClientTokenAuth(address string, httpClient *http.Client, auth authorizat
 	return newClientInstance(address, httpClient, slingBase)
 }
 
-func newClientInstance(address string, httpClient *http.Client, sling *sling.Sling) *Client {
+func newClientInstance(address string, httpClient sling.Doer, sling *sling.Sling) *Client {
 	slingRest := sling.New().Path(PathSuffixREST)
 	slingLog := sling.New().Path(PathSuffixLog)
 
 	return &Client{
 		address:    address,
-		HTTPClient: httpClient,
 		commonBase: sling,
 		Projects:   subapi.NewProjectService(slingRest.New(), httpClient),
 		BuildTypes: subapi.NewBuildTypeService(slingRest.New(), httpClient),
 		Builds:     subapi.NewBuildService(slingRest.New(), httpClient),
 		BuildQueue: subapi.NewBuildQueueService(slingRest.New(), httpClient),
 		Token:      subapi.NewTokenService(slingRest.New(), httpClient),
-
 		Logs: subapi.NewLogService(slingLog.New(), httpClient),
 	}
 }

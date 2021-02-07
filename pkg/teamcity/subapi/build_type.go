@@ -2,7 +2,6 @@ package subapi
 
 import (
 	"encoding/json"
-	"net/http"
 
 	"github.com/dghubble/sling"
 )
@@ -94,15 +93,15 @@ type BuildTypeReferences struct {
 // BuildTypeService has operations for handling build configurations and templates
 type BuildTypeService struct {
 	sling         *sling.Sling
-	httpClient    *http.Client
+	httpClient    sling.Doer
 	requestsMaker *requestsMaker
 }
 
-func NewBuildTypeService(base *sling.Sling, httpClient *http.Client) *BuildTypeService {
-	sling := base.Path("buildTypes/")
+func NewBuildTypeService(base *sling.Sling, httpClient sling.Doer) *BuildTypeService {
+	s := base.Path("buildTypes/")
 	return &BuildTypeService{
 		httpClient:    httpClient,
-		sling:         sling,
-		requestsMaker: newRequestsMakerWithSling(httpClient, sling),
+		sling:         s,
+		requestsMaker: newRequestsMakerWithSling(httpClient, s),
 	}
 }
