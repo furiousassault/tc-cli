@@ -10,6 +10,7 @@ import (
 	"github.com/furiousassault/tc-cli/pkg/configuration"
 	"github.com/furiousassault/tc-cli/pkg/output"
 
+	commandArtifact "github.com/furiousassault/tc-cli/pkg/commands/artifact"
 	commandDescribe "github.com/furiousassault/tc-cli/pkg/commands/describe"
 	commandList "github.com/furiousassault/tc-cli/pkg/commands/list"
 	commandLog "github.com/furiousassault/tc-cli/pkg/commands/log"
@@ -51,6 +52,7 @@ func main() {
 		commandDescribe.CreateCommandTreeDescribe(api.Builds, output.NewBuildDescriptionWriter(os.Stdout)),
 		commandList.CreateCommandTreeList(api.Projects, api.Builds, output.NewListWriter(os.Stdout)),
 		commandRun.CreateCommandBuildConfigurationRun(api.BuildQueue, output.NewTriggerResultWriter(os.Stdout)),
+		commandArtifact.CreateCommandTreeArtifact(api.Builds, config.ArtifactsDirectoryDefault),
 	)
 
 	if err := cmdRoot.Execute(); err != nil {

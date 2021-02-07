@@ -77,9 +77,6 @@ func (b *BuildService) GetBuild(buildTypeID string, number string) (build BuildJ
 	}
 
 	err = transformFieldsTimeFormat(&build)
-	if err != nil {
-		return
-	}
 	return
 }
 
@@ -87,11 +84,17 @@ func (b *BuildService) GetBuildResults(buildID string) (resultingProperties Prop
 	locator := fmt.Sprintf("%s/resulting-properties", LocatorID(buildID))
 
 	err = b.requestsMaker.get(locator, &resultingProperties, "build resulting properties")
-	if err != nil {
-		return
-	}
-
 	return
+}
+
+func (b *BuildService) GetArtifact(buildID, path string) (artifactBinary []byte, err error) {
+	locator := fmt.Sprintf("%s/artifacts/content/%s", LocatorID(buildID), path)
+
+	return b.requestsMaker.getResponseBytes(
+		locator,
+		nil,
+		"getArtifact",
+	)
 }
 
 func transformFieldsTimeFormat(build *BuildJson) error {

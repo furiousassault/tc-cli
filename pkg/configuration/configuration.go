@@ -49,12 +49,15 @@ func ConfigFromYAML(configPath string) (config *Configuration, err error) {
 	}
 
 	initializeAuthParameters(config)
+	initializeArtifactsDirectory(config)
 
+	return config, config.validate()
+}
+
+func initializeArtifactsDirectory(config *Configuration) {
 	if config.ArtifactsDirectoryDefault == "" {
 		config.ArtifactsDirectoryDefault = DefaultPathArtifactsDirectory
 	}
-
-	return config, config.validate()
 }
 
 func initializeAuthParameters(config *Configuration) {

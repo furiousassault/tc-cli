@@ -9,6 +9,7 @@ import (
 const (
 	DefaultPathToken         = ".tc-client/access.token"
 	DefaultPathConfiguration = ".tc-client/configuration.yaml"
+	DefaultPathArtifactsDirectory = "/tmp/tc-client/artifacts/"
 )
 
 func configPathWithDefault(path string) (configPath string, err error) {
