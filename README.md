@@ -2,11 +2,11 @@
 
 Basic console client for TeamCity.
 
-For now, it supports a limited number of scenarios. API objects are partially deserialized, with support of the currently
-required fields only. Should not be used as "library", package, etc. Backward compatibility is not guaranteed.
+For now, it supports a limited number of scenarios. API objects are partially deserialized, with support of the
+currently required fields only. Should not be used as "library", package, etc. Backward compatibility is not guaranteed.
 
 Tested only with current latest version of Teamcity (2020.2.1 (build 85633)), Supports token-based, HTTP and guest
-authentication. Token-based auth is encouraged.
+authentication. Token-based authentication is encouraged.
 
 ### Configuration
 
@@ -18,7 +18,14 @@ this moment.
 
 ### Build
 
-Application can be built using `go build cmd/main.go` or via Dockerfile provided.
+Application can be built using `go build cmd/main.go`. Another quick starter is
+
+```
+make build-image
+docker run -e TC_CLI_TOKEN=<your_token> --network=host furiousassault/tc-cli:latest -c configuration.example.yaml list projects
+```
+
+provided, that configuration file contains valid URL of Teamcity server.
 
 ### Supported scenarios
 
@@ -154,7 +161,8 @@ Output path may be specified by `-o/--output` flag. The value is interpreted as 
 suffix `<buildID>/<artifact_path>`, if it ends with slash, dot or double dot. An attempt to create nested directories
 will be done. Otherwise, it's interpreted as direct path to write. No path suffixes will be added in such case.
 
-Default artifacts directory path is `/tmp/tc-client/artifacts/`. Default can be overridden in configuration by setting `artifacts_directory`
+Default artifacts directory path is `/tmp/tc-client/artifacts/`. Default can be overridden in configuration by
+setting `artifacts_directory`
 parameter, or by environment variable `TC_CLI_ARTIFACTS_DIRECTORY_DEFAULT`.
 
 If the target output file exists, command requires flag `-f/--force` to override it.

@@ -8,6 +8,5 @@ WORKDIR /app
 COPY . /app
 
 RUN make build
-RUN rm -rf /app
 
-ENTRYPOINT ["/tc-cli"]
+ENTRYPOINT ["build/tc-cli"]
