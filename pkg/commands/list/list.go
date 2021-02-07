@@ -1,16 +1,28 @@
 package list
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
-	"github.com/furiousassault/tc-cli/pkg/output"
 	"github.com/furiousassault/tc-cli/pkg/teamcity/subapi"
 )
 
+type projectsAPI interface {
+	GetList() (refs subapi.ProjectsReferences, err error)
+	GetBuildTypesList(projectId string) (refs subapi.BuildTypeReferences, err error)
+}
+
+type buildsGetter interface {
+	GetBuildsByBuildConf(buildTypeID string, count int) (builds subapi.Builds, err error)
+}
+
+type listWriter interface {
+	WriteListProjects(projects subapi.ProjectsReferences)
+	WriteListBuildTypes(buildTypes subapi.BuildTypeReferences)
+	WriteListBuilds(builds subapi.Builds)
+}
+
 func CreateCommandTreeList(
-	projectsAPI ProjectsAPI, buildsGetter BuildsGetter, outputter output.Outputter) *cobra.Command {
+	projectsAPI projectsAPI, buildsGetter buildsGetter, writer listWriter) *cobra.Command {
 	cmdList := &cobra.Command{
 		Use:   "list <subcommand>",
 		Short: "list subcommand tree",
@@ -20,14 +32,14 @@ func CreateCommandTreeList(
 		Aliases: []string{"project"},
 		Short:   "list projects",
 		Args:    cobra.NoArgs,
-		RunE:    createHandlerListProjects(projectsAPI, outputter),
+		RunE:    createHandlerListProjects(projectsAPI, writer),
 	}
 	cmdListBuildType := &cobra.Command{
 		Use:     "buildtypes [project_id]",
 		Aliases: []string{"buildtype"},
 		Short:   "list buildTypes of project specified by id",
 		Args:    cobra.ExactArgs(1),
-		RunE:    createHandlerListBuildTypes(projectsAPI, outputter),
+		RunE:    createHandlerListBuildTypes(projectsAPI, writer),
 	}
 	cmdListBuild := &cobra.Command{
 		Use:     "builds <buildtype_id>",
@@ -44,90 +56,63 @@ func CreateCommandTreeList(
 	)
 	// pass flag as a pointer to make it filled with actual value on final function execution;
 	// todo find more obvious solution to create command flags
-	cmdListBuild.RunE = createHandlerListBuilds(buildsGetter, outputter, buildsCountPointer)
+	cmdListBuild.RunE = createHandlerListBuilds(buildsGetter, writer, buildsCountPointer)
 	cmdList.AddCommand(cmdListProject, cmdListBuildType, cmdListBuild)
 
 	return cmdList
 }
 
-type ProjectsAPI interface {
-	GetList() (refs subapi.ProjectsReferences, err error)
-	GetBuildTypesList(projectId string) (refs subapi.BuildTypeReferences, err error)
-}
-
-type BuildsGetter interface {
-	GetBuildsByBuildConf(buildTypeID string, count int) (builds subapi.Builds, err error)
-}
-
 func createHandlerListProjects(
-	projectsAPI ProjectsAPI, outputter output.Outputter) func(cmd *cobra.Command, args []string) error {
+	projectsAPI projectsAPI, writer listWriter) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		return listProjects(projectsAPI, outputter)
+		return listProjects(projectsAPI, writer)
 	}
 }
 
 func createHandlerListBuildTypes(
-	projectsAPI ProjectsAPI, outputter output.Outputter) func(cmd *cobra.Command, args []string) error {
+	projectsAPI projectsAPI, writer listWriter) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		projectID := args[0]
 
-		return listBuildTypes(projectsAPI, outputter, projectID)
+		return listBuildTypes(projectsAPI, writer, projectID)
 	}
 }
 
 func createHandlerListBuilds(
-	buildsGetter BuildsGetter, outputter output.Outputter, count *int) func(cmd *cobra.Command, args []string) error {
+	buildsGetter buildsGetter, writer listWriter, count *int) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		projectID := args[0]
 
-		return listBuilds(buildsGetter, outputter, projectID, *count)
+		return listBuilds(buildsGetter, writer, projectID, *count)
 	}
 }
 
-func listProjects(projectsAPI ProjectsAPI, outputter output.Outputter) error {
+func listProjects(projectsAPI projectsAPI, writer listWriter) error {
 	projects, err := projectsAPI.GetList()
 	if err != nil {
 		return err
 	}
 
-	data := make([][]string, 0)
-
-	for _, entry := range projects.Items {
-		data = append(data, []string{entry.ID, fmt.Sprintf("\"%s\"", entry.Name), entry.Description})
-	}
-
-	outputter.PrintTable([]string{"ID", "NAME", "DESCRIPTION"}, data)
+	writer.WriteListProjects(projects)
 	return nil
 }
 
-func listBuildTypes(projectsAPI ProjectsAPI, outputter output.Outputter, projectID string) error {
+func listBuildTypes(projectsAPI projectsAPI, writer listWriter, projectID string) error {
 	buildTypes, err := projectsAPI.GetBuildTypesList(projectID)
 	if err != nil {
 		return err
 	}
 
-	data := make([][]string, 0)
-
-	for _, entry := range buildTypes.Items {
-		data = append(data, []string{entry.ID, fmt.Sprintf("\"%s\"", entry.Name)})
-	}
-
-	outputter.PrintTable([]string{"ID", "NAME"}, data)
+	writer.WriteListBuildTypes(buildTypes)
 	return nil
 }
 
-func listBuilds(buildsGetter BuildsGetter, outputter output.Outputter, buildTypeID string, buildsCount int) error {
+func listBuilds(buildsGetter buildsGetter, writer listWriter, buildTypeID string, buildsCount int) error {
 	builds, err := buildsGetter.GetBuildsByBuildConf(buildTypeID, buildsCount)
 	if err != nil {
 		return err
 	}
 
-	data := make([][]string, 0)
-
-	for _, entry := range builds.Items {
-		data = append(data, []string{fmt.Sprint(entry.ID), entry.Number, entry.State, entry.Status})
-	}
-
-	outputter.PrintTable([]string{"id", "number", "state", "status"}, data)
+	writer.WriteListBuilds(builds)
 	return nil
 }

@@ -10,16 +10,17 @@ import (
 	"github.com/furiousassault/tc-cli/pkg/teamcity"
 )
 
-// Build represents TeamCity project build.
-type Build struct {
-	ID          int        `json:"id"`
-	Number      string     `json:"number"`
-	Status      string     `json:"status"`
-	StatusText  string     `json:"statusText"`
-	State       string     `json:"state"`
-	BuildTypeID string     `json:"buildTypeId"`
-	Progress    int        `json:"progress"`
-	Properties  Parameters `json:"properties"`
+// BuildJson represents TeamCity project build.
+type BuildJson struct {
+	ID                  int        `json:"id"`
+	Number              string     `json:"number"`
+	Status              string     `json:"status"`
+	StatusText          string     `json:"statusText"`
+	State               string     `json:"state"`
+	BuildTypeID         string     `json:"buildTypeId"`
+	Progress            int        `json:"progress"`
+	Properties          Parameters `json:"properties"`
+	ResultingProperties Properties
 
 	QueuedDate string `json:"queuedDate"`
 	StartDate  string `json:"startDate"`
@@ -65,7 +66,7 @@ func (b *BuildService) GetBuildsByBuildConf(buildTypeID string, count int) (buil
 	return
 }
 
-func (b *BuildService) GetBuild(buildTypeID string, number string) (build Build, err error) {
+func (b *BuildService) GetBuild(buildTypeID string, number string) (build BuildJson, err error) {
 	// TODO probably this locator is not properly queryescaped though it works
 	n := url.QueryEscape(fmt.Sprintf(",number:%s", number))
 	buildTypeFull := url.QueryEscape(fmt.Sprintf("buildType:(%s)", buildTypeID))
@@ -76,21 +77,40 @@ func (b *BuildService) GetBuild(buildTypeID string, number string) (build Build,
 		return
 	}
 
-	queued, err := teamcity.ParseTCTimeFormat(build.QueuedDate)
+	err = transformFieldsTimeFormat(&build)
 	if err != nil {
 		return
+	}
+	return
+}
+
+func (b *BuildService) GetBuildResults(buildID string) (resultingProperties Properties, err error) {
+	locator := fmt.Sprintf("%s/resulting-properties", LocatorID(buildID))
+
+	err = b.requestsMaker.get(locator, &resultingProperties, "build resulting properties")
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func transformFieldsTimeFormat(build *BuildJson) error {
+	queued, err := teamcity.ParseTCTimeFormat(build.QueuedDate)
+	if err != nil {
+		return err
 	}
 	started, err := teamcity.ParseTCTimeFormat(build.StartDate)
 	if err != nil {
-		return
+		return err
 	}
 	finished, err := teamcity.ParseTCTimeFormat(build.FinishDate)
 	if err != nil {
-		return
+		return err
 	}
 
 	build.QueuedDate = queued.String()
 	build.StartDate = started.String()
 	build.FinishDate = finished.String()
-	return
+	return nil
 }
