@@ -1,0 +1,11 @@
+api:
+  url: "http://localhost:8111"
+
+  authorization:
+    token: ""
+    token_path: "/home/user/workspace/tc-cli/access.token"
+
+  http:
+    request_timeout: 10s
+
+artifacts_directory: "/tmp/tc-client/artifacts/"

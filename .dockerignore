@@ -1,0 +1,8 @@
+.dockerignore
+Dockerfile*
+.coverage
+.coveragerc
+.git/
+.gitignore
+.idea/
+.travis.yml
