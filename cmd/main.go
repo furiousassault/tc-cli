@@ -40,9 +40,9 @@ func main() {
 		Timeout: config.API.HTTP.RequestTimeout,
 	}
 
-	api, err := apiClient.InitAPI(*config, httpClient)
-	if err != nil {
-		log.Fatal("API init failed: ", err)
+	api := apiClient.InitAPI(*config, httpClient)
+	if err = api.Ping(); err != nil {
+		log.Fatal("API ping failed: ", err)
 	}
 
 	cmdRoot.AddCommand(

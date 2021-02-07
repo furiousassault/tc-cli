@@ -16,40 +16,31 @@ const (
 	PathSuffixLog  = ""
 )
 
-func InitAPI(config configuration.Configuration, httpClient sling.Doer) (api *Client, err error) {
+func InitAPI(config configuration.Configuration, httpClient sling.Doer) *Client {
 	if config.API.Authorization.Token != "" {
-		api = NewClientTokenAuth(
+		return NewClientTokenAuth(
 			config.API.URL,
 			httpClient,
 			authorization.NewAuthorizerToken(config.API.Authorization.Token),
 		)
-
-		return api, api.Ping()
 	}
 
 	if config.API.Authorization.Username != "" && config.API.Authorization.Password != "" {
-		api = NewClientBasicAuth(
+		return NewClientBasicAuth(
 			config.API.URL,
 			httpClient,
 			authorization.NewAuthorizerHTTP(config.API.Authorization.Username, config.API.Authorization.Password),
 		)
-
-		return api, api.Ping()
 	}
 
 	fmt.Println("No authorization is provided, trying to use guest auth")
-	api = NewClientGuestAuth(config.API.URL, httpClient, authorization.NewAuthorizerGuest())
 
-	return api, api.Ping()
+	return NewClientGuestAuth(config.API.URL, httpClient, authorization.NewAuthorizerGuest())
 }
 
 // Client represents the base for connecting to TeamCity
 type Client struct {
-	address string
-	baseURI string
-
-	commonBase   *sling.Sling
-	logFetchBase *sling.Sling
+	commonBase *sling.Sling
 
 	Projects   *subapi.ProjectService
 	BuildTypes *subapi.BuildTypeService
@@ -95,14 +86,13 @@ func newClientInstance(address string, httpClient sling.Doer, sling *sling.Sling
 	slingLog := sling.New().Path(PathSuffixLog)
 
 	return &Client{
-		address:    address,
 		commonBase: sling,
 		Projects:   subapi.NewProjectService(slingRest.New(), httpClient),
 		BuildTypes: subapi.NewBuildTypeService(slingRest.New(), httpClient),
 		Builds:     subapi.NewBuildService(slingRest.New(), httpClient),
 		BuildQueue: subapi.NewBuildQueueService(slingRest.New(), httpClient),
 		Token:      subapi.NewTokenService(slingRest.New(), httpClient),
-		Logs: subapi.NewLogService(slingLog.New(), httpClient),
+		Logs:       subapi.NewLogService(slingLog.New(), httpClient),
 	}
 }
 
