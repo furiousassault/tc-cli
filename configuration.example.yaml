@@ -3,7 +3,9 @@ api:
 
   authorization:
     token: ""
-    token_path: "/home/engineer/workspace/tc-cli/access.token"
+    token_path: "/home/user/workspace/tc-cli/access.token"
 
   http:
     request_timeout: 10s
+
+artifacts_directory: "/tmp/tc-client/artifacts/"

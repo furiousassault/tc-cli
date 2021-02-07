@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	"github.com/dghubble/sling"
 
@@ -55,8 +56,8 @@ func NewClientGuestAuth(address string, httpClient sling.Doer, auth authorizatio
 		Set("Accept", "application/json").
 		Set("Origin", address)
 
-	slingBase.Base(address + auth.ProvideURLAuthSuffix())
-	return newClientInstance(address, httpClient, slingBase)
+	slingBase.Base(fmt.Sprintf("%s/%s", strings.TrimSuffix(address, "/"), auth.ProvideURLAuthSuffix()))
+	return newClientInstance(httpClient, slingBase)
 }
 
 func NewClientBasicAuth(address string, httpClient sling.Doer, auth authorization.AuthorizerHTTP) *Client {
@@ -64,10 +65,10 @@ func NewClientBasicAuth(address string, httpClient sling.Doer, auth authorizatio
 		Set("Accept", "application/json").
 		Set("Origin", address)
 
-	slingBase.Base(address+auth.ProvideURLAuthSuffix()).
+	slingBase.Base(fmt.Sprintf("%s/%s", strings.TrimSuffix(address, "/"), auth.ProvideURLAuthSuffix())).
 		SetBasicAuth(auth.Username, auth.Password)
 
-	return newClientInstance(address, httpClient, slingBase)
+	return newClientInstance(httpClient, slingBase)
 }
 
 func NewClientTokenAuth(address string, httpClient sling.Doer, auth authorization.AuthorizerToken) *Client {
@@ -75,13 +76,13 @@ func NewClientTokenAuth(address string, httpClient sling.Doer, auth authorizatio
 		Set("Accept", "application/json").
 		Set("Origin", address)
 
-	slingBase.Base(address+auth.ProvideURLAuthSuffix()).
+	slingBase.Base(fmt.Sprintf("%s/%s", strings.TrimSuffix(address, "/"), auth.ProvideURLAuthSuffix())).
 		Set("Authorization", fmt.Sprintf("Bearer %s", auth.Token))
 
-	return newClientInstance(address, httpClient, slingBase)
+	return newClientInstance(httpClient, slingBase)
 }
 
-func newClientInstance(address string, httpClient sling.Doer, sling *sling.Sling) *Client {
+func newClientInstance(httpClient sling.Doer, sling *sling.Sling) *Client {
 	slingRest := sling.New().Path(PathSuffixREST)
 	slingLog := sling.New().Path(PathSuffixLog)
 

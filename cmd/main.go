@@ -28,11 +28,12 @@ func main() {
 
 	// This pre-parsing attempt returns error because doesn't see flags defined after its execution.
 	// It's not clear how to parse args partially before main parsing/execution routine.
-	// there should be another way to do it, without globals and such hacks. To fix later.
+	// There should be another way to do it, without globals and such dirty hacks. To fix later.
 	_ = cmdRoot.PersistentFlags().Parse(os.Args[1:])
 
 	config, err := configuration.ConfigFromYAML(*configPath)
 	if err != nil {
+		_ = cmdRoot.Usage()
 		log.Fatal(err)
 	}
 

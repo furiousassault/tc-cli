@@ -7,7 +7,7 @@ LABEL description="Teamcity CLI docker image" \
 WORKDIR /app
 COPY . /app
 
-RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux go build -tags netgo --ldflags '-extldflags "-static"' -o /tc-cli cmd/main.go
+RUN make build
 RUN rm -rf /app
 
 ENTRYPOINT ["/tc-cli"]
