@@ -14,11 +14,11 @@ func fileContentString(filePath string) (content string, err error) {
 func configurationFromYaml(filePath string) (config *Configuration, err error) {
 	file, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return nil, err // todo wrap
+		return nil, err
 	}
 
-	if err := yaml.Unmarshal(file, &config); err != nil {
-		return nil, err // todo wrap
+	if err = yaml.Unmarshal(file, &config); err != nil {
+		return nil, err
 	}
 
 	return

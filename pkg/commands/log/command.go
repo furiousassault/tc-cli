@@ -34,5 +34,6 @@ func buildLog(getter BuildLogGetter, printer StringPrinter, buildID string) erro
 	}
 
 	printer.PrintString(string(out))
+
 	return nil
 }

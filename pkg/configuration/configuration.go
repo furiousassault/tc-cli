@@ -83,5 +83,4 @@ func initializeAuthParameters(config *Configuration) {
 	}
 
 	config.API.Authorization.Token = token
-	return
 }

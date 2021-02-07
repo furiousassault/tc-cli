@@ -5,9 +5,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// todo creator for this func?
+const CommandTokenArgsNumber = 3
+
 func validateTokenArgs(cmd *cobra.Command, args []string) error {
-	if err := cobra.ExactArgs(3)(cmd, args); err != nil {
+	if err := cobra.ExactArgs(CommandTokenArgsNumber)(cmd, args); err != nil {
 		return errors.Wrap(errValidation, err.Error())
 	}
 

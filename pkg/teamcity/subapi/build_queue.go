@@ -17,15 +17,15 @@ type TriggerResult struct {
 	Parameters  Parameters
 }
 
-type TriggerResultJson struct {
+type TriggerResultJSON struct {
 	ID    int    `json:"id,omitempty" xml:"id"`
 	State string `json:"state,omitempty" xml:"state"`
 
-	Triggered  TriggeredJson `json:"triggered,omitempty" xml:"triggered"`
+	Triggered  TriggeredJSON `json:"triggered,omitempty" xml:"triggered"`
 	Properties Parameters    `json:"properties,omitempty" xml:"properties"`
 }
 
-func (t TriggerResultJson) TriggerResult() TriggerResult {
+func (t TriggerResultJSON) TriggerResult() TriggerResult {
 	return TriggerResult{
 		BuildID:     fmt.Sprint(t.ID),
 		BuildState:  t.State,
@@ -34,7 +34,7 @@ func (t TriggerResultJson) TriggerResult() TriggerResult {
 	}
 }
 
-type TriggeredJson struct {
+type TriggeredJSON struct {
 	User User   `json:"user,omitempty" xml:"user"`
 	Date string `json:"date,omitempty" xml:"date"`
 }
@@ -61,7 +61,7 @@ func NewBuildQueueService(base *sling.Sling, client sling.Doer) *BuildQueueServi
 
 func (s *BuildQueueService) RunBuildByBuildConfID(buildconfID string) (result TriggerResult, err error) {
 	data := triggerData{BuildType: buildTypeJSON{ID: buildconfID}}
-	jsonStruct := &TriggerResultJson{}
+	jsonStruct := &TriggerResultJSON{}
 
 	err = s.requestsMaker.post("", data, &jsonStruct, "runBuildConfiguration")
 	return jsonStruct.TriggerResult(), err

@@ -8,13 +8,15 @@ import (
 	"github.com/furiousassault/tc-cli/pkg/teamcity/subapi"
 )
 
+const CommandDescribeBuildArgsNumber = 2
+
 type buildGetter interface {
-	GetBuild(buildTypeID string, number string) (build subapi.BuildJson, err error)
+	GetBuild(buildTypeID string, number string) (build subapi.BuildJSON, err error)
 	GetBuildResults(buildID string) (resultingProperties subapi.Properties, err error)
 }
 
 type buildDescriptionWriter interface {
-	WriteBuildDescription(build subapi.BuildJson)
+	WriteBuildDescription(build subapi.BuildJSON)
 }
 
 func CreateCommandTreeDescribe(buildGetter buildGetter, writer buildDescriptionWriter) *cobra.Command {
@@ -25,7 +27,7 @@ func CreateCommandTreeDescribe(buildGetter buildGetter, writer buildDescriptionW
 	cmdDescribeBuild := &cobra.Command{
 		Use:   "build <buildtype_ID> <build_number>",
 		Short: "Show main attributes of build specified by id",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(CommandDescribeBuildArgsNumber),
 	}
 	resultingPropertiesPointer := cmdDescribeBuild.Flags().BoolP(
 		"short",

@@ -23,7 +23,7 @@ func NewBuildDescriptionWriter(writer io.Writer) *BuildDescriptionWriter {
 	}
 }
 
-func (w *BuildDescriptionWriter) WriteBuildDescription(build subapi.BuildJson) {
+func (w *BuildDescriptionWriter) WriteBuildDescription(build subapi.BuildJSON) {
 	w.t.WriteTable(
 		tableHeadersBuildDescription,
 		[][]string{

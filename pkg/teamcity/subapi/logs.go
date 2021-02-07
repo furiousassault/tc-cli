@@ -20,12 +20,12 @@ func NewLogService(base *sling.Sling, client sling.Doer) *LogService {
 }
 
 type LogQueryParameters struct {
-	BuildId string `url:"buildId"`
+	BuildID string `url:"buildId"`
 }
 
 func (l *LogService) GetBuildLog(buildID string) (out []byte, err error) {
 	return l.requestsMaker.getResponseBytes("",
-		&LogQueryParameters{BuildId: buildID},
+		&LogQueryParameters{BuildID: buildID},
 		"log",
 	)
 }

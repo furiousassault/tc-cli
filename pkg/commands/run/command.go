@@ -30,7 +30,6 @@ func createHandlerBuildConfigurationRun(
 
 		return buildConfigurationRun(buildRunner, writer, buildConfID)
 	}
-
 }
 
 func buildConfigurationRun(buildRunner BuildRunner, writer triggerResultWriter, buildConfID string) error {

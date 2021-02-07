@@ -8,8 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	pkgErrors "github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 )
+
+const CommandDownloadArgsNum = 2
 
 type artifactGetter interface {
 	GetArtifact(buildID, path string) (artifactBinary []byte, err error)
@@ -23,7 +27,7 @@ func CreateCommandTreeArtifact(artifactDownloader artifactGetter, outputPathDefa
 	cmdArtifactDownload := &cobra.Command{
 		Use:   "download <buildID> <path>",
 		Short: "Download artifact ",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(CommandDownloadArgsNum),
 	}
 	outputPathPointer := cmdArtifactDownload.Flags().StringP(
 		"outputPath",
@@ -62,7 +66,7 @@ func artifactDownload(artifactGetter artifactGetter, buildID, artifactPath, outp
 		}
 
 		if !forceFlag {
-			return fmt.Errorf(
+			return pkgErrors.Wrapf(errFileExists,
 				"specified output path '%s' is an existing file. Use -f/--force to override",
 				outputPath,
 			)
@@ -74,7 +78,7 @@ func artifactDownload(artifactGetter artifactGetter, buildID, artifactPath, outp
 		return err
 	}
 
-	if err = ioutil.WriteFile(outputPath, artifact, 0666); err != nil {
+	if err = ioutil.WriteFile(outputPath, artifact, 0600); err != nil {
 		return err
 	}
 

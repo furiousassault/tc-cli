@@ -5,13 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/furiousassault/tc-cli/pkg/configuration"
 	"github.com/furiousassault/tc-cli/pkg/teamcity/subapi"
 )
-
-var ()
 
 func CreateCommandTreeToken(config configuration.Configuration, tokenAPI API) *cobra.Command {
 	cmdToken := &cobra.Command{
@@ -63,13 +62,13 @@ func tokenRotate(tokenAPI API, tokenFilePath, tokenOld, userID, tokenNameOld, to
 
 	for _, token := range tokens.Items {
 		if tokenNameNew == token.Name {
-			return fmt.Errorf("token with name \"%s\" already exists", tokenNameNew)
+			return errors.Wrapf(errTokenNamesMatch, "token with name \"%s\" already exists", tokenNameNew)
 		}
 	}
 
 	// create new token using user credentials
 	tokenBackupFilePath := fmt.Sprintf("%s.old", tokenFilePath)
-	if err := ioutil.WriteFile(tokenBackupFilePath, []byte(tokenOld), 0666); err != nil {
+	if err := ioutil.WriteFile(tokenBackupFilePath, []byte(tokenOld), 0600); err != nil {
 		return err
 	}
 
@@ -82,7 +81,7 @@ func tokenRotate(tokenAPI API, tokenFilePath, tokenOld, userID, tokenNameOld, to
 		return err
 	}
 
-	if err = ioutil.WriteFile(tokenFilePath, []byte(token.Value), 0666); err != nil {
+	if err = ioutil.WriteFile(tokenFilePath, []byte(token.Value), 060); err != nil {
 		return err
 	}
 

@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 
 	"github.com/dghubble/sling"
+	"github.com/pkg/errors"
 )
 
 type requestsMaker struct {
@@ -33,11 +35,12 @@ func (r *requestsMaker) getResponseBytes(path string, queryParams interface{}, r
 	if err != nil {
 		return nil, err
 	}
-	if response.StatusCode == 200 {
+
+	if response.StatusCode == http.StatusOK {
 		return bodyBytes, nil
 	}
 
-	if response.StatusCode == 404 {
+	if response.StatusCode == http.StatusNotFound {
 		return []byte("Resource is not found"), nil
 	}
 
@@ -46,8 +49,6 @@ func (r *requestsMaker) getResponseBytes(path string, queryParams interface{}, r
 
 func (r *requestsMaker) get(path string, out interface{}, resourceDescription string) error {
 	request, _ := r.sling.New().Get(path).Request()
-	// fmt.Println(request.URL.Scheme)
-	// fmt.Println(request.URL)
 	response, err := r.httpClient.Do(request)
 	if err != nil {
 		return err
@@ -55,7 +56,7 @@ func (r *requestsMaker) get(path string, out interface{}, resourceDescription st
 
 	defer response.Body.Close()
 
-	if response.StatusCode == 200 {
+	if response.StatusCode == http.StatusOK {
 		err = json.NewDecoder(response.Body).Decode(out)
 		if err != nil {
 			fmt.Println(err)
@@ -102,11 +103,11 @@ func (r *requestsMaker) deleteByIDWithSling(sling *sling.Sling, resourceID strin
 	}
 
 	defer response.Body.Close()
-	if response.StatusCode == 204 {
+	if response.StatusCode == http.StatusNoContent {
 		return nil
 	}
 
-	if response.StatusCode != 200 && response.StatusCode != 204 {
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNoContent {
 		dt, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			return err
@@ -118,5 +119,8 @@ func (r *requestsMaker) deleteByIDWithSling(sling *sling.Sling, resourceID strin
 }
 
 func (r *requestsMaker) restError(dt []byte, status int, op string, res string) error {
-	return fmt.Errorf("API error, status '%d' method '%s' operation - %s: %s", status, op, res, string(dt))
+	return errors.Wrapf(
+		errAPI,
+		"API error, status '%d' method '%s' operation - %s: %s", status, op, res, string(dt),
+	)
 }

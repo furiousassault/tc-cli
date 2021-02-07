@@ -1,9 +1,9 @@
 package log
 
 import (
-	"fmt"
 	"strconv"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +13,7 @@ func validateLogArgs(cmd *cobra.Command, args []string) error {
 	}
 
 	if _, err := strconv.ParseInt(args[0], 10, 64); err != nil {
-		return fmt.Errorf("enter valid positive integer buildId")
+		return errors.Wrap(err, "enter valid positive integer buildId")
 	}
 
 	return nil

@@ -1,14 +1,15 @@
 package configuration
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/pkg/errors"
 )
 
 const (
-	DefaultPathToken         = ".tc-client/access.token"
-	DefaultPathConfiguration = ".tc-client/configuration.yaml"
+	DefaultPathToken              = ".tc-client/access.token"
+	DefaultPathConfiguration      = ".tc-client/configuration.yaml"
 	DefaultPathArtifactsDirectory = "/tmp/tc-client/artifacts/"
 )
 
@@ -31,7 +32,7 @@ func tokenPathWithDefault(path string) (tokenPath string, err error) {
 func pathInHomeDir(pathSuffix string) (path string, err error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf("error during user's home directory evaluation")
+		return "", errors.Wrapf(err, "error during user's home directory evaluation")
 	}
 
 	return filepath.Join(homeDir, pathSuffix), nil

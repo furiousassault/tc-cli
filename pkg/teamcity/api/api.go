@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/dghubble/sling"
+	"github.com/pkg/errors"
 
 	"github.com/furiousassault/tc-cli/pkg/configuration"
 	"github.com/furiousassault/tc-cli/pkg/teamcity/api/authorization"
@@ -111,7 +112,7 @@ func (c *Client) Ping() error {
 			return err
 		}
 
-		return fmt.Errorf("API error %s: %s", response.Status, body)
+		return errors.Wrapf(err, "API error %s: %s", response.Status, body)
 	}
 
 	return nil

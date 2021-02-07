@@ -43,8 +43,7 @@ type BuildType struct {
 	// steps are a bit complex and useless for now
 	Templates *Templates
 
-	Parameters    *Parameters
-	buildTypeJSON *buildTypeJSON
+	Parameters *Parameters
 }
 
 // UnmarshalJSON implements JSON deserialization for TriggerSchedule

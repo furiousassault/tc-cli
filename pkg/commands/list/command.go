@@ -8,7 +8,7 @@ import (
 
 type projectsAPI interface {
 	GetList() (refs subapi.ProjectsReferences, err error)
-	GetBuildTypesList(projectId string) (refs subapi.BuildTypeReferences, err error)
+	GetBuildTypesList(projectID string) (refs subapi.BuildTypeReferences, err error)
 }
 
 type buildsGetter interface {
@@ -54,8 +54,7 @@ func CreateCommandTreeList(
 		10,
 		"number of latest builds to return in list",
 	)
-	// pass flag as a pointer to make it filled with actual value on final function execution;
-	// todo find more obvious solution to create command flags
+	// pass flag as a pointer to make it filled with actual value on final function execution
 	cmdListBuild.RunE = createHandlerListBuilds(buildsGetter, writer, buildsCountPointer)
 	cmdList.AddCommand(cmdListProject, cmdListBuildType, cmdListBuild)
 

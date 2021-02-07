@@ -59,7 +59,7 @@ func (s *ProjectService) GetList() (refs ProjectsReferences, err error) {
 }
 
 // GetBuildTypesList retrieves build types list of project specified by id
-func (s *ProjectService) GetBuildTypesList(projectId string) (refs BuildTypeReferences, err error) {
-	err = s.requestsMaker.get(fmt.Sprintf("%s/buildTypes", projectId), &refs, "project")
+func (s *ProjectService) GetBuildTypesList(projectID string) (refs BuildTypeReferences, err error) {
+	err = s.requestsMaker.get(fmt.Sprintf("%s/buildTypes", projectID), &refs, "project")
 	return
 }

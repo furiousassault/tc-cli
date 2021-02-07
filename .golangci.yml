@@ -143,5 +143,8 @@ linters:
     - gci
     - errorlint
     - wrapcheck
+    - wsl
+    - gosec
+    - gocritic
 
   fast: false
