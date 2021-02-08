@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"strings"
 
 	"github.com/dghubble/sling"
@@ -105,7 +106,7 @@ func (c *Client) Ping() error {
 		return err
 	}
 
-	if response.StatusCode != 200 && response.StatusCode != 403 {
+	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusForbidden {
 		fmt.Println(response.StatusCode)
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {

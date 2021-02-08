@@ -38,17 +38,17 @@ func (s *TokenService) TokenCreate(username, tokenName string) (token Token, err
 		Name: tokenName,
 	}
 
-	err = s.requestsMaker.post(path, data, &token, "tokenCreate")
+	err = s.requestsMaker.post(path, data, &token)
 	return
 }
 
 func (s *TokenService) TokenRemove(userID string, tokenName string) (err error) {
 	path := fmt.Sprintf("%s/tokens/%s", userID, tokenName)
-	return s.requestsMaker.delete(path, "tokenRemove")
+	return s.requestsMaker.delete(path)
 }
 
 func (s *TokenService) TokenList(userID string) (tokens Tokens, err error) {
 	path := fmt.Sprintf("%s/tokens", url.PathEscape(userID))
-	err = s.requestsMaker.get(path, &tokens, "tokenList")
+	err = s.requestsMaker.getJSON(path, &tokens)
 	return
 }
