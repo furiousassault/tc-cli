@@ -48,7 +48,7 @@ func (r *requestsMaker) getResponseBytes(
 	return nil, r.restError(bodyBytes, response.StatusCode, "GET")
 }
 
-func (r *requestsMaker) getJSON(path string, out interface{}) error {
+func (r *requestsMaker) getResponseJSON(path string, out interface{}) error {
 	request, _ := r.sling.New().Get(path).Request()
 	response, err := r.httpClient.Do(request)
 	if err != nil {
@@ -120,8 +120,5 @@ func (r *requestsMaker) deleteByIDWithSling(sling *sling.Sling, resourceID strin
 }
 
 func (r *requestsMaker) restError(dt []byte, status int, op string) error {
-	return errors.Wrapf(
-		errAPI,
-		"API error, status '%d' method '%s': %s", status, op, string(dt),
-	)
+	return errors.Wrapf(errAPI, "API error, status '%d' method '%s': %s", status, op, string(dt))
 }

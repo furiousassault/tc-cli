@@ -106,6 +106,8 @@ func (c *Client) Ping() error {
 		return err
 	}
 
+	defer response.Body.Close()
+
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusForbidden {
 		fmt.Println(response.StatusCode)
 		body, err := ioutil.ReadAll(response.Body)

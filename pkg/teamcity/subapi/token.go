@@ -49,6 +49,6 @@ func (s *TokenService) TokenRemove(userID string, tokenName string) (err error) 
 
 func (s *TokenService) TokenList(userID string) (tokens Tokens, err error) {
 	path := fmt.Sprintf("%s/tokens", url.PathEscape(userID))
-	err = s.requestsMaker.getJSON(path, &tokens)
+	err = s.requestsMaker.getResponseJSON(path, &tokens)
 	return
 }

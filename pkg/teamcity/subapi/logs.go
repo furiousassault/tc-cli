@@ -24,6 +24,5 @@ type logQueryParameters struct {
 }
 
 func (l *LogService) GetBuildLog(buildID string) (out []byte, err error) {
-	return l.requestsMaker.getResponseBytes("", &logQueryParameters{BuildID: buildID},
-	)
+	return l.requestsMaker.getResponseBytes("", &logQueryParameters{BuildID: buildID})
 }

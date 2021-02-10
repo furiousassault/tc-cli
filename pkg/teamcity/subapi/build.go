@@ -61,7 +61,7 @@ func (b *BuildService) GetBuildsByBuildConf(buildTypeID string, count int) (buil
 		locator = fmt.Sprintf("%s,count:%d", locator, count)
 	}
 
-	err = b.requestsMaker.getJSON(locator, &builds)
+	err = b.requestsMaker.getResponseJSON(locator, &builds)
 	return
 }
 
@@ -71,7 +71,7 @@ func (b *BuildService) GetBuild(buildTypeID string, number string) (build BuildJ
 	buildTypeFull := url.QueryEscape(fmt.Sprintf("buildType:(%s)", buildTypeID))
 	locator := fmt.Sprintf("%s%s", buildTypeFull, n)
 
-	err = b.requestsMaker.getJSON(locator, &build)
+	err = b.requestsMaker.getResponseJSON(locator, &build)
 	if err != nil {
 		return
 	}
@@ -83,7 +83,7 @@ func (b *BuildService) GetBuild(buildTypeID string, number string) (build BuildJ
 func (b *BuildService) GetBuildResults(buildID string) (resultingProperties Properties, err error) {
 	locator := fmt.Sprintf("%s/resulting-properties", LocatorID(buildID))
 
-	err = b.requestsMaker.getJSON(locator, &resultingProperties)
+	err = b.requestsMaker.getResponseJSON(locator, &resultingProperties)
 	return
 }
 
