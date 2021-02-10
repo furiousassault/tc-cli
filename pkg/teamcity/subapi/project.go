@@ -54,12 +54,12 @@ func NewProjectService(base *sling.Sling, client sling.Doer) *ProjectService {
 
 // GetList retrieves a projects list.
 func (s *ProjectService) GetList() (refs ProjectsReferences, err error) {
-	err = s.requestsMaker.get("", &refs, "project")
+	err = s.requestsMaker.getResponseJSON("", &refs)
 	return
 }
 
 // GetBuildTypesList retrieves build types list of project specified by id
 func (s *ProjectService) GetBuildTypesList(projectID string) (refs BuildTypeReferences, err error) {
-	err = s.requestsMaker.get(fmt.Sprintf("%s/buildTypes", projectID), &refs, "project")
+	err = s.requestsMaker.getResponseJSON(fmt.Sprintf("%s/buildTypes", projectID), &refs)
 	return
 }

@@ -63,6 +63,6 @@ func (s *BuildQueueService) RunBuildByBuildConfID(buildconfID string) (result Tr
 	data := triggerData{BuildType: buildTypeJSON{ID: buildconfID}}
 	jsonStruct := &TriggerResultJSON{}
 
-	err = s.requestsMaker.post("", data, &jsonStruct, "runBuildConfiguration")
+	err = s.requestsMaker.post("", data, &jsonStruct)
 	return jsonStruct.TriggerResult(), err
 }
