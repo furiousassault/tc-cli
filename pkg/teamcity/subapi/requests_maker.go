@@ -22,8 +22,7 @@ func newRequestsMakerWithSling(httpClient sling.Doer, s *sling.Sling) *requestsM
 	}
 }
 
-func (r *requestsMaker) getResponseBytes(
-	path string, queryParams interface{}) (out []byte, err error) {
+func (r *requestsMaker) getResponseBytes(path string, queryParams interface{}) (out []byte, err error) {
 	request, _ := r.sling.New().Get(path).QueryStruct(queryParams).Request()
 	response, err := r.httpClient.Do(request)
 	if err != nil {
@@ -45,7 +44,7 @@ func (r *requestsMaker) getResponseBytes(
 		return []byte("Resource is not found"), nil
 	}
 
-	return nil, r.restError(bodyBytes, response.StatusCode, "GET")
+	return nil, r.apiError(bodyBytes, response.StatusCode, "GET")
 }
 
 func (r *requestsMaker) getResponseJSON(path string, out interface{}) error {
@@ -69,7 +68,7 @@ func (r *requestsMaker) getResponseJSON(path string, out interface{}) error {
 	if err != nil {
 		return err
 	}
-	return r.restError(b, response.StatusCode, "GET")
+	return r.apiError(b, response.StatusCode, "GET")
 }
 
 func (r *requestsMaker) post(path string, data interface{}, out interface{}) error {
@@ -89,7 +88,7 @@ func (r *requestsMaker) post(path string, data interface{}, out interface{}) err
 	if err != nil {
 		return err
 	}
-	return r.restError(dt, response.StatusCode, "POST")
+	return r.apiError(dt, response.StatusCode, "POST")
 }
 
 func (r *requestsMaker) delete(path string) error {
@@ -113,12 +112,12 @@ func (r *requestsMaker) deleteByIDWithSling(sling *sling.Sling, resourceID strin
 		if err != nil {
 			return err
 		}
-		return r.restError(dt, response.StatusCode, "DELETE")
+		return r.apiError(dt, response.StatusCode, "DELETE")
 	}
 
 	return nil
 }
 
-func (r *requestsMaker) restError(dt []byte, status int, op string) error {
+func (r *requestsMaker) apiError(dt []byte, status int, op string) error {
 	return errors.Wrapf(errAPI, "API error, status '%d' method '%s': %s", status, op, string(dt))
 }

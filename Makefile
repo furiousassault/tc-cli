@@ -1,16 +1,16 @@
 PROJECT_PKGS := $$(go list -mod vendor ./pkg/... | grep -v /vendor/)
 APP_NAME ?= tc-cli
 
-format: ## Format sources
+format:
 	go fmt $(PROJECT_PKGS)
 
-lint: ## Run linter on sources
+lint:
 	golangci-lint run --modules-download-mode=vendor ./pkg...
 
-test: ## Run unit tests without coverage report
-	go test -mod vendor -v ./...
+test:
+	go test -mod vendor -cover -v ./...
 
-build: ## Build application
+build:
 	mkdir -p build
 	go build -mod=vendor -o build/${APP_NAME} cmd/main.go
 
