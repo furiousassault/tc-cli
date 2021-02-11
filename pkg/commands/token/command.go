@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -12,21 +13,28 @@ import (
 	"github.com/furiousassault/tc-cli/pkg/teamcity/subapi"
 )
 
-func CreateCommandTreeToken(config configuration.Configuration, tokenAPI API) *cobra.Command {
+func CreateCommandTreeToken(config configuration.Configuration, serviceProvider serviceProvider) *cobra.Command {
 	cmdToken := &cobra.Command{
 		Use:   "token <subcommand>",
 		Short: "token subcommand tree",
 		RunE:  nil,
 	}
 	cmdTokenRotate := &cobra.Command{
-		Use:   "rotate <userID> <old_token_name> <new_token_name>",
-		Short: "show main attributes of entity specified by id",
-		Args:  validateTokenArgs,
-		RunE:  createHandlerTokenRotate(config, tokenAPI),
+		Use: "rotate <userID> <old_token_name> [<new_token_name>]",
+		Short: "Revoke token with old token name " +
+			"and create new token under the same name or under <new_token_name> if it is present. " +
+			"New token will be written to token file path.",
+		Args: validateTokenArgs,
+		RunE: createHandlerTokenRotate(config, serviceProvider),
 	}
 	cmdToken.AddCommand(cmdTokenRotate)
 
 	return cmdToken
+}
+
+type serviceProvider interface {
+	TokenServiceCurrent() API
+	TokenServiceWithTokenAuth(token string)
 }
 
 type API interface {
@@ -37,14 +45,18 @@ type API interface {
 
 type cobraCommandExecutorE func(_ *cobra.Command, args []string) error
 
-func createHandlerTokenRotate(config configuration.Configuration, tokenAPI API) cobraCommandExecutorE {
+func createHandlerTokenRotate(config configuration.Configuration, sp serviceProvider) cobraCommandExecutorE {
 	return func(cmd *cobra.Command, args []string) error {
 		userID := args[0]
 		tokenNameOld := args[1]
-		tokenNameNew := args[2]
+		tokenNameNew := ""
+
+		if len(args) > CommandTokenArgsNumberMin {
+			tokenNameNew = args[2]
+		}
 
 		return tokenRotate(
-			tokenAPI,
+			sp,
 			config.API.Authorization.TokenFilePath,
 			config.API.Authorization.Token,
 			userID,
@@ -54,11 +66,20 @@ func createHandlerTokenRotate(config configuration.Configuration, tokenAPI API) 
 	}
 }
 
-func tokenRotate(tokenAPI API, tokenFilePath, tokenOld, userID, tokenNameOld, tokenNameNew string) error {
-	tokens, err := tokenAPI.TokenList(userID)
+func tokenRotate(serviceProvider serviceProvider, tokenFilePath, tokenOld, userID, tokenNameOld, tokenNameNew string) error {
+	tokens, err := serviceProvider.TokenServiceCurrent().TokenList(userID)
 	if err != nil {
 		return err
 	}
+
+	tokenNameTemporary := fmt.Sprint(time.Now().Unix())
+	tokenTemporary, err := serviceProvider.TokenServiceCurrent().TokenCreate(userID, tokenNameTemporary)
+	if err != nil {
+		return err
+	}
+
+	// this should be performed in other way; refactor later
+	serviceProvider.TokenServiceWithTokenAuth(tokenTemporary.Value)
 
 	for _, token := range tokens.Items {
 		if tokenNameNew == token.Name {
@@ -72,16 +93,26 @@ func tokenRotate(tokenAPI API, tokenFilePath, tokenOld, userID, tokenNameOld, to
 		return err
 	}
 
-	token, err := tokenAPI.TokenCreate(userID, tokenNameNew)
+	if err := serviceProvider.TokenServiceCurrent().TokenRemove(userID, tokenNameOld); err != nil {
+		return err
+	}
+
+	if tokenNameNew == "" {
+		tokenNameNew = tokenNameOld
+	}
+
+	token, err := serviceProvider.TokenServiceCurrent().TokenCreate(userID, tokenNameNew)
 	if err != nil {
 		return err
 	}
 
-	if err := tokenAPI.TokenRemove(userID, tokenNameOld); err != nil {
+	tokenWritePath := fmt.Sprintf("%s.%s.new", tokenFilePath, tokenNameNew)
+
+	if err = ioutil.WriteFile(tokenWritePath, []byte(token.Value), 0600); err != nil {
 		return err
 	}
 
-	if err = ioutil.WriteFile(tokenFilePath, []byte(token.Value), 060); err != nil {
+	if err := serviceProvider.TokenServiceCurrent().TokenRemove(userID, tokenNameTemporary); err != nil {
 		return err
 	}
 
@@ -89,6 +120,11 @@ func tokenRotate(tokenAPI API, tokenFilePath, tokenOld, userID, tokenNameOld, to
 		return err
 	}
 
-	fmt.Printf("Token with name '%s' has been rotated successfully.\n", tokenNameOld)
+	fmt.Printf(
+		"Token with name '%s' has been rotated successfully. New token name is '%s'. Token file path: '%s'\n",
+		tokenNameOld,
+		tokenNameNew,
+		tokenWritePath,
+	)
 	return nil
 }
