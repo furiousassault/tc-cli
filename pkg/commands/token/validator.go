@@ -5,15 +5,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const CommandTokenArgsNumber = 3
+const (
+	CommandTokenArgsNumberMin = 2
+	CommandTokenArgsNumberMax = 3
+)
 
 func validateTokenArgs(cmd *cobra.Command, args []string) error {
-	if err := cobra.ExactArgs(CommandTokenArgsNumber)(cmd, args); err != nil {
+	if err := cobra.MinimumNArgs(CommandTokenArgsNumberMin)(cmd, args); err != nil {
 		return errors.Wrap(errValidation, err.Error())
 	}
 
-	if args[1] == args[2] {
-		return errors.Wrap(errValidation, "old and new token names must not be equal")
+	if err := cobra.MaximumNArgs(CommandTokenArgsNumberMax)(cmd, args); err != nil {
+		return errors.Wrap(errValidation, err.Error())
 	}
 
 	return nil

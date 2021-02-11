@@ -146,5 +146,6 @@ linters:
     - wsl
     - gosec
     - gocritic
+    - goerr113
 
   fast: false

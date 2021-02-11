@@ -122,18 +122,28 @@ Custom build parameters or build comments are not supported yet.
 Usage:
 
 ```
-token rotate <userID> <old_token_name> <new_token_name>`
+token rotate <userID> <old_token_name> [<new_token_name>]`
 ```
 
 Example:
 
 ```
-$tc-cli -c configuration.example.yaml token rotate furiousassault token_3 token_2
-Token with name 'token_3' has been rotated successfully.
+$tc-cli -c configuration.example.yaml token rotate furiousassault token_0
+Token with name 'token_0' has been rotated successfully. New token name is 'token_0'. Token file path: '/home/furiousassault/workspace/tc-cli/access.token.token_0.new'
+
+$tc-cli token -c configuration.example.yaml rotate furiousassault token_1 token_11
+Token with name 'token_1' has been rotated successfully. New token name is 'token_11'. Token file path: '/home/furiousassault/workspace/tc-cli/access.token.token_11.new'
 ```
 
 Unfortunately, there's no obvious way to get the token name by its value nor to get userID by token, so user has to
-specify his userID, old token name (which is going to be revoked) and new token name.
+specify his userID, and the name of token that is going to be revoked.
+
+User can optionally specify new token name as the last parameter. New token is stored in
+the `token_file_path.<token_new>.new` path specified. `<token_new>` defaults to old token name if `new_token_name` is
+omitted.
+
+This is done to prevent the unwanted override, if the token user wants to rotate is not his current work token, with
+which application is being run.
 
 When the better way to perform such operation will be discovered (in API or by providing more complex token local
 storage), the behavior will change.

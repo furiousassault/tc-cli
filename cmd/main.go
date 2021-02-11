@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	commandToken "github.com/furiousassault/tc-cli/pkg/commands/token"
 	"github.com/furiousassault/tc-cli/pkg/configuration"
 	"github.com/furiousassault/tc-cli/pkg/output"
 
@@ -15,8 +16,6 @@ import (
 	commandList "github.com/furiousassault/tc-cli/pkg/commands/list"
 	commandLog "github.com/furiousassault/tc-cli/pkg/commands/log"
 	commandRun "github.com/furiousassault/tc-cli/pkg/commands/run"
-	commandToken "github.com/furiousassault/tc-cli/pkg/commands/token"
-
 	apiClient "github.com/furiousassault/tc-cli/pkg/teamcity/api"
 )
 
@@ -35,25 +34,25 @@ func main() {
 	if err != nil {
 		_ = cmdRoot.Usage()
 		log.Fatal(err)
+
 	}
 
-	// fmt.Println("configuration", config)
 	httpClient := &http.Client{
 		Timeout: config.API.HTTP.RequestTimeout,
 	}
 
 	api := apiClient.InitAPI(*config, httpClient)
 	if err = api.Ping(); err != nil {
-		log.Fatal("API ping failed: ", err)
+		log.Fatal(err)
 	}
 
 	cmdRoot.AddCommand(
 		commandLog.CreateCommandBuildLog(api.Logs, output.NewStringPrinterStdout()),
-		commandToken.CreateCommandTreeToken(*config, api.Token),
 		commandDescribe.CreateCommandTreeDescribe(api.Builds, output.NewBuildDescriptionWriter(os.Stdout)),
 		commandList.CreateCommandTreeList(api.Projects, api.Builds, output.NewListWriter(os.Stdout)),
 		commandRun.CreateCommandBuildConfigurationRun(api.BuildQueue, output.NewTriggerResultWriter(os.Stdout)),
 		commandArtifact.CreateCommandTreeArtifact(api.Builds, config.ArtifactsDirectoryDefault),
+		commandToken.CreateCommandTreeToken(*config, api),
 	)
 
 	if err := cmdRoot.Execute(); err != nil {

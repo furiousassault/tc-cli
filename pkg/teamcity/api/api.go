@@ -9,6 +9,7 @@ import (
 	"github.com/dghubble/sling"
 	"github.com/pkg/errors"
 
+	"github.com/furiousassault/tc-cli/pkg/commands/token"
 	"github.com/furiousassault/tc-cli/pkg/configuration"
 	"github.com/furiousassault/tc-cli/pkg/teamcity/api/authorization"
 	"github.com/furiousassault/tc-cli/pkg/teamcity/subapi"
@@ -43,6 +44,8 @@ func InitAPI(config configuration.Configuration, httpClient sling.Doer) *Client 
 
 // Client represents the base for connecting to TeamCity
 type Client struct {
+	address    string
+	httpClient sling.Doer
 	commonBase *sling.Sling
 
 	Projects   *subapi.ProjectService
@@ -59,7 +62,7 @@ func NewClientGuestAuth(address string, httpClient sling.Doer, auth authorizatio
 		Set("Origin", address)
 
 	slingBase.Base(fmt.Sprintf("%s/%s", strings.TrimSuffix(address, "/"), auth.ProvideURLAuthSuffix()))
-	return newClientInstance(httpClient, slingBase)
+	return newClientInstance(address, httpClient, slingBase)
 }
 
 func NewClientBasicAuth(address string, httpClient sling.Doer, auth authorization.AuthorizerHTTP) *Client {
@@ -70,7 +73,7 @@ func NewClientBasicAuth(address string, httpClient sling.Doer, auth authorizatio
 	slingBase.Base(fmt.Sprintf("%s/%s", strings.TrimSuffix(address, "/"), auth.ProvideURLAuthSuffix())).
 		SetBasicAuth(auth.Username, auth.Password)
 
-	return newClientInstance(httpClient, slingBase)
+	return newClientInstance(address, httpClient, slingBase)
 }
 
 func NewClientTokenAuth(address string, httpClient sling.Doer, auth authorization.AuthorizerToken) *Client {
@@ -81,14 +84,16 @@ func NewClientTokenAuth(address string, httpClient sling.Doer, auth authorizatio
 	slingBase.Base(fmt.Sprintf("%s/%s", strings.TrimSuffix(address, "/"), auth.ProvideURLAuthSuffix())).
 		Set("Authorization", fmt.Sprintf("Bearer %s", auth.Token))
 
-	return newClientInstance(httpClient, slingBase)
+	return newClientInstance(address, httpClient, slingBase)
 }
 
-func newClientInstance(httpClient sling.Doer, sling *sling.Sling) *Client {
+func newClientInstance(address string, httpClient sling.Doer, sling *sling.Sling) *Client {
 	slingRest := sling.New().Path(PathSuffixREST)
 	slingLog := sling.New().Path(PathSuffixLog)
 
 	return &Client{
+		address:    address,
+		httpClient: httpClient,
 		commonBase: sling,
 		Projects:   subapi.NewProjectService(slingRest.New(), httpClient),
 		BuildTypes: subapi.NewBuildTypeService(slingRest.New(), httpClient),
@@ -99,24 +104,48 @@ func newClientInstance(httpClient sling.Doer, sling *sling.Sling) *Client {
 	}
 }
 
+func (c *Client) TokenServiceCurrent() token.API {
+	return c.Token
+}
+
+// TokenServiceWithTokenAuth is a hack to achieve token service reinitialization during command execution.
+func (c *Client) TokenServiceWithTokenAuth(token string) {
+	slingBase := sling.New().
+		Set("Accept", "application/json").
+		Set("Origin", c.address)
+
+	slingBase.Base(strings.TrimSuffix(c.address, "/")).
+		Set("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	slingBase.Path(PathSuffixREST)
+	c.Token = subapi.NewTokenService(slingBase, c.httpClient)
+}
+
 // Ping tests if the client is properly configured and can be used
 func (c *Client) Ping() error {
-	response, err := c.commonBase.Get("app/rest/server").ReceiveSuccess(nil)
+	r, err := c.commonBase.Get("app/rest/server").Request()
+	if err != nil {
+		return err
+	}
+	response, err := c.httpClient.Do(r)
 	if err != nil {
 		return err
 	}
 
 	defer response.Body.Close()
 
-	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusForbidden {
-		fmt.Println(response.StatusCode)
-		body, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return err
-		}
-
-		return errors.Wrapf(err, "API error %s: %s", response.Status, body)
+	if response.StatusCode == http.StatusOK {
+		return nil
 	}
 
-	return nil
+	if response.StatusCode == http.StatusUnauthorized || response.StatusCode == http.StatusForbidden {
+		return fmt.Errorf("ping error, status %d: %s", response.StatusCode, "unauthorized")
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err
+	}
+
+	return errors.Wrapf(err, "ping error %s: %s", response.Status, body)
 }
