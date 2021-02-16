@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	pkgErrors "github.com/pkg/errors"
-
 	"github.com/spf13/cobra"
 )
 
@@ -67,8 +65,9 @@ func artifactDownload(artifactGetter artifactGetter, buildID, artifactPath, outp
 		}
 
 		if !forceFlag {
-			return pkgErrors.Wrapf(errFileExists,
-				"specified output path '%s' is an existing file. Use -f/--force to override",
+			return fmt.Errorf(
+				"%w: specified output path '%s' is an existing file. Use -f/--force to override",
+				errFileExists,
 				outputPath,
 			)
 		}

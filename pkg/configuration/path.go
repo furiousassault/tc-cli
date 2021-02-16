@@ -1,10 +1,9 @@
 package configuration
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -32,7 +31,7 @@ func tokenPathWithDefault(path string) (tokenPath string, err error) {
 func pathInHomeDir(pathSuffix string) (path string, err error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return "", errors.Wrapf(err, "error during user's home directory evaluation")
+		return "", fmt.Errorf("error during user's home directory evaluation: %w", err)
 	}
 
 	return filepath.Join(homeDir, pathSuffix), nil
