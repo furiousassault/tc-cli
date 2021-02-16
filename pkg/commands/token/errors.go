@@ -4,5 +4,5 @@ import "errors"
 
 var (
 	errValidation      = errors.New("validation error")
-	errTokenNamesMatch = errors.New("token names are equal")
+	errTokenNameExists = errors.New("token name already exists")
 )

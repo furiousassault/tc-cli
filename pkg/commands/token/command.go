@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/furiousassault/tc-cli/pkg/configuration"
@@ -66,7 +65,8 @@ func createHandlerTokenRotate(config configuration.Configuration, sp serviceProv
 	}
 }
 
-func tokenRotate(serviceProvider serviceProvider, tokenFilePath, tokenOld, userID, tokenNameOld, tokenNameNew string) error {
+func tokenRotate(
+	serviceProvider serviceProvider, tokenFilePath, tokenOld, userID, tokenNameOld, tokenNameNew string) error {
 	tokens, err := serviceProvider.TokenServiceCurrent().TokenList(userID)
 	if err != nil {
 		return err
@@ -83,13 +83,12 @@ func tokenRotate(serviceProvider serviceProvider, tokenFilePath, tokenOld, userI
 
 	for _, token := range tokens.Items {
 		if tokenNameNew == token.Name {
-			return errors.Wrapf(errTokenNamesMatch, "token with name \"%s\" already exists", tokenNameNew)
+			return fmt.Errorf("%w: token with name \"%s\" already exists", errTokenNameExists, tokenNameNew)
 		}
 	}
 
-	// create new token using user credentials
-	tokenBackupFilePath := fmt.Sprintf("%s.old", tokenFilePath)
-	if err := ioutil.WriteFile(tokenBackupFilePath, []byte(tokenOld), 0600); err != nil {
+	tokenBackupFilePath, err := writeTokenBackup(tokenFilePath, tokenOld)
+	if err != nil {
 		return err
 	}
 
@@ -127,4 +126,14 @@ func tokenRotate(serviceProvider serviceProvider, tokenFilePath, tokenOld, userI
 		tokenWritePath,
 	)
 	return nil
+}
+
+func writeTokenBackup(tokenFilePath string, tokenOld string) (string, error) {
+	tokenBackupFilePath := fmt.Sprintf("%s.old", tokenFilePath)
+
+	if err := ioutil.WriteFile(tokenBackupFilePath, []byte(tokenOld), 0600); err != nil {
+		return "", err
+	}
+
+	return tokenBackupFilePath, nil
 }

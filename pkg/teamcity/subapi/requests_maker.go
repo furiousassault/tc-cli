@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/dghubble/sling"
-	"github.com/pkg/errors"
 )
 
 type requestsMaker struct {
@@ -84,11 +83,12 @@ func (r *requestsMaker) post(path string, data interface{}, out interface{}) err
 		json.NewDecoder(response.Body).Decode(out)
 		return nil
 	}
-	dt, err := ioutil.ReadAll(response.Body)
+	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return err
 	}
-	return r.apiError(dt, response.StatusCode, "POST")
+
+	return r.apiError(body, response.StatusCode, "POST")
 }
 
 func (r *requestsMaker) delete(path string) error {
@@ -108,16 +108,17 @@ func (r *requestsMaker) deleteByIDWithSling(sling *sling.Sling, resourceID strin
 	}
 
 	if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusNoContent {
-		dt, err := ioutil.ReadAll(response.Body)
+		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
 			return err
 		}
-		return r.apiError(dt, response.StatusCode, "DELETE")
+
+		return r.apiError(body, response.StatusCode, "DELETE")
 	}
 
 	return nil
 }
 
-func (r *requestsMaker) apiError(dt []byte, status int, op string) error {
-	return errors.Wrapf(errAPI, "API error, status '%d' method '%s': %s", status, op, string(dt))
+func (r *requestsMaker) apiError(body []byte, status int, op string) error {
+	return fmt.Errorf("%w: status '%d' method '%s': %s", errAPI, status, op, string(body))
 }

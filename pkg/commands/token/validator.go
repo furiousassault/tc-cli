@@ -1,7 +1,8 @@
 package token
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -12,11 +13,11 @@ const (
 
 func validateTokenArgs(cmd *cobra.Command, args []string) error {
 	if err := cobra.MinimumNArgs(CommandTokenArgsNumberMin)(cmd, args); err != nil {
-		return errors.Wrap(errValidation, err.Error())
+		return fmt.Errorf("%w: %s", errValidation, err.Error())
 	}
 
 	if err := cobra.MaximumNArgs(CommandTokenArgsNumberMax)(cmd, args); err != nil {
-		return errors.Wrap(errValidation, err.Error())
+		return fmt.Errorf("%w: %s", errValidation, err.Error())
 	}
 
 	return nil

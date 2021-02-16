@@ -1,6 +1,6 @@
 package artifact
 
-import "github.com/pkg/errors"
+import "errors"
 
 var (
 	errFileExists = errors.New("file exists")

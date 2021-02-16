@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/dghubble/sling"
-	"github.com/pkg/errors"
 
 	"github.com/furiousassault/tc-cli/pkg/commands/token"
 	"github.com/furiousassault/tc-cli/pkg/configuration"
@@ -125,11 +124,12 @@ func (c *Client) TokenServiceWithTokenAuth(token string) {
 func (c *Client) Ping() error {
 	r, err := c.commonBase.Get("app/rest/server").Request()
 	if err != nil {
-		return err
+		return fmt.Errorf("error constructing request for ping: %w", err)
 	}
+
 	response, err := c.httpClient.Do(r)
 	if err != nil {
-		return err
+		return fmt.Errorf("error ping response: %w", err)
 	}
 
 	defer response.Body.Close()
@@ -144,8 +144,8 @@ func (c *Client) Ping() error {
 
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("error unmarshalling ping response body: %w", err)
 	}
 
-	return errors.Wrapf(err, "ping error %s: %s", response.Status, body)
+	return fmt.Errorf("ping response status %s, body: %s", response.Status, body)
 }

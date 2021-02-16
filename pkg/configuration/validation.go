@@ -1,10 +1,12 @@
 package configuration
 
-import "github.com/pkg/errors"
+import (
+	"fmt"
+)
 
 func (c *Configuration) validate() error {
 	if c.API.URL == "" {
-		return errors.Wrap(ErrConfigValidation, "Teamcity URL is not provided")
+		return fmt.Errorf("%w: Teamcity URL is not provided", ErrConfigValidation)
 	}
 
 	return nil
